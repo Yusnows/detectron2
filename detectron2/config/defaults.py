@@ -483,6 +483,20 @@ _C.MODEL.RESNETS.DEFORM_MODULATED = False
 _C.MODEL.RESNETS.DEFORM_NUM_GROUPS = 1
 
 
+# Apply deep stem 
+_C.MODEL.RESNETS.DEEP_STEM = False
+# Apply avg after conv2 in the BottleBlock
+# When AVD=True, the STRIDE_IN_1X1 should be False
+_C.MODEL.RESNETS.AVD = False
+# Apply avg_down to the downsampling layer for residual path 
+_C.MODEL.RESNETS.AVG_DOWN = False
+
+# Radix in ResNeSt
+_C.MODEL.RESNETS.RADIX = 1
+# Bottleneck_width in ResNeSt
+_C.MODEL.RESNETS.BOTTLENECK_WIDTH = 64
+
+
 # ---------------------------------------------------------------------------- #
 # Solver
 # ---------------------------------------------------------------------------- #

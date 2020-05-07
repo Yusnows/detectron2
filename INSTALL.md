@@ -19,7 +19,7 @@ also installs detectron2 with a few simple commands.
 gcc & g++ ≥ 5 are required. [ninja](https://ninja-build.org/) is recommended for faster build.
 After having them, run:
 ```
-python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
+python -m pip install 'git+https://github.com/zhanghang1989/detectron2-ResNeSt.git'
 # (add --user if you don't have permission)
 
 # Or, to install it from a local clone:

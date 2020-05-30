@@ -297,6 +297,9 @@ class RandomRotation(TransformGen):
         if center is not None:
             center = (w * center[0], h * center[1])  # Convert to absolute coordinates
 
+        if angle % 360 == 0:
+            return NoOpTransform()
+
         return RotationTransform(h, w, angle, expand=self.expand, center=center, interp=self.interp)
 
 
@@ -446,7 +449,7 @@ class RandomBrightness(TransformGen):
 
 class RandomSaturation(TransformGen):
     """
-    Randomly transforms image saturation.
+    Randomly transforms saturation of an RGB image.
 
     Saturation intensity is uniformly sampled in (intensity_min, intensity_max).
     - intensity < 1 will reduce saturation (make the image more grayscale)
@@ -466,7 +469,7 @@ class RandomSaturation(TransformGen):
         self._init(locals())
 
     def get_transform(self, img):
-        assert img.shape[-1] == 3, "Saturation only works on RGB images"
+        assert img.shape[-1] == 3, "RandomSaturation only works on RGB images"
         w = np.random.uniform(self.intensity_min, self.intensity_max)
         grayscale = img.dot([0.299, 0.587, 0.114])[:, :, np.newaxis]
         return BlendTransform(src_image=grayscale, src_weight=1 - w, dst_weight=w)
@@ -474,7 +477,8 @@ class RandomSaturation(TransformGen):
 
 class RandomLighting(TransformGen):
     """
-    Randomly transforms image color using fixed PCA over ImageNet.
+    The "lighting" augmentation described in AlexNet, using fixed PCA over ImageNet.
+    Inputs are assumed to be RGB images.
 
     The degree of color jittering is randomly sampled via a normal distribution,
     with standard deviation given by the scale parameter.
@@ -493,7 +497,7 @@ class RandomLighting(TransformGen):
         self.eigen_vals = np.array([0.2175, 0.0188, 0.0045])
 
     def get_transform(self, img):
-        assert img.shape[-1] == 3, "Saturation only works on RGB images"
+        assert img.shape[-1] == 3, "RandomLighting only works on RGB images"
         weights = np.random.normal(scale=self.scale, size=3)
         return BlendTransform(
             src_image=self.eigen_vecs.dot(weights * self.eigen_vals), src_weight=1.0, dst_weight=1.0
@@ -502,7 +506,7 @@ class RandomLighting(TransformGen):
 
 def apply_transform_gens(transform_gens, img):
     """
-    Apply a list of :class:`TransformGen` on the input image, and
+    Apply a list of :class:`TransformGen` or :class:`Transform` on the input image, and
     returns the transformed image and a list of transforms.
 
     We cannot simply create and return all transforms without
@@ -510,7 +514,7 @@ def apply_transform_gens(transform_gens, img):
     need the output of the previous one.
 
     Args:
-        transform_gens (list): list of :class:`TransformGen` instance to
+        transform_gens (list): list of :class:`TransformGen` or :class:`Transform` instance to
             be applied.
         img (ndarray): uint8 or floating point images with 1 or 3 channels.
 
@@ -519,13 +523,13 @@ def apply_transform_gens(transform_gens, img):
         TransformList: contain the transforms that's used.
     """
     for g in transform_gens:
-        assert isinstance(g, TransformGen), g
+        assert isinstance(g, (Transform, TransformGen)), g
 
     check_dtype(img)
 
     tfms = []
     for g in transform_gens:
-        tfm = g.get_transform(img)
+        tfm = g.get_transform(img) if isinstance(g, TransformGen) else g
         assert isinstance(
             tfm, Transform
         ), "TransformGen {} must return an instance of Transform! Got {} instead".format(g, tfm)

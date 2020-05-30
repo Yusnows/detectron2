@@ -11,7 +11,9 @@ from fvcore.common.timer import Timer
 from detectron2.data import DatasetCatalog, MetadataCatalog
 from detectron2.structures import BoxMode
 
-DENSEPOSE_KEYS = ["dp_x", "dp_y", "dp_I", "dp_U", "dp_V", "dp_masks"]
+DENSEPOSE_MASK_KEY = "dp_masks"
+DENSEPOSE_KEYS_WITHOUT_MASK = ["dp_x", "dp_y", "dp_I", "dp_U", "dp_V"]
+DENSEPOSE_KEYS = DENSEPOSE_KEYS_WITHOUT_MASK + [DENSEPOSE_MASK_KEY]
 DENSEPOSE_METADATA_URL_PREFIX = "https://dl.fbaipublicfiles.com/densepose/data/"
 
 
@@ -47,6 +49,16 @@ DATASETS = [
         name="densepose_chimps",
         images_root="densepose_evolution/densepose_chimps",
         annotations_fpath="densepose_evolution/annotations/densepose_chimps_densepose.json",
+    ),
+    CocoDatasetInfo(
+        name="posetrack2017_train",
+        images_root="posetrack2017/posetrack_data_2017",
+        annotations_fpath="posetrack2017/densepose_posetrack_train2017.json",
+    ),
+    CocoDatasetInfo(
+        name="posetrack2017_val",
+        images_root="posetrack2017/posetrack_data_2017",
+        annotations_fpath="posetrack2017/densepose_posetrack_val2017.json",
     ),
 ]
 

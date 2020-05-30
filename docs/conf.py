@@ -57,9 +57,6 @@ class GithubURLDomain(Domain):
             return []
 
 
-# The suffix(es) of source filenames.
-# You can specify multiple suffix as a list of string:
-#
 # to support markdown
 from recommonmark.parser import CommonMarkParser
 
@@ -80,6 +77,7 @@ except ImportError:
         "torchvision", "torchvision.ops",
     ]:
         sys.modules[m] = mock.Mock(name=m)
+    sys.modules['torch'].__version__ = "1.5"  # fake version
 
 for m in [
     "cv2", "scipy", "portalocker", "detectron2._C",
@@ -186,6 +184,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+html_css_files = ["css/custom.css"]
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

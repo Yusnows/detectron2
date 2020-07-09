@@ -432,7 +432,7 @@ class DeformBottleneckBlock(CNNBlockBase):
         return out
 
 
-class BasicStem(nn.Module):
+class BasicStem(CNNBlockBase):
     def __init__(self, in_channels=3, out_channels=64, norm="BN",
                  deep_stem=False, stem_width=32):
         """
@@ -441,9 +441,9 @@ class BasicStem(nn.Module):
             norm (str or callable): norm after the first conv layer.
                 See :func:`layers.get_norm` for supported format.
         """
-        super().__init__()
+        super(BasicStem, self).__init__(in_channels, out_channels, 4)
+        self.in_channels = in_channels
         self.deep_stem = deep_stem
-
         if self.deep_stem:
             self.conv1_1 = Conv2d(3, stem_width, kernel_size=3, stride=2,
                                   padding=1, bias=False,
@@ -457,6 +457,7 @@ class BasicStem(nn.Module):
                                   padding=1, bias=False,
                                   norm=get_norm(norm, stem_width * 2),
                                   )
+            self.out_channels = self.conv1_3.out_channels
             for layer in [self.conv1_1, self.conv1_2, self.conv1_3]:
                 if layer is not None:
                     weight_init.c2_msra_fill(layer)
@@ -471,6 +472,7 @@ class BasicStem(nn.Module):
                 norm=get_norm(norm, out_channels),
             )
             weight_init.c2_msra_fill(self.conv1)
+            self.out_channels = self.conv1.out_channels
 
     def forward(self, x):
         if self.deep_stem:
@@ -486,16 +488,6 @@ class BasicStem(nn.Module):
         x = F.max_pool2d(x, kernel_size=3, stride=2, padding=1)
         return x
 
-    @property
-    def out_channels(self):
-        if self.deep_stem:
-            return self.conv1_3.out_channels
-        else:
-            return self.conv1.out_channels
-
-    @property
-    def stride(self):
-        return 4  # = stride 2 conv -> stride 2 max pool
 
 
 class ResNet(Backbone):

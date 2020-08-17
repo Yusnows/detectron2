@@ -9,8 +9,10 @@ from detectron2.layers import Conv2d, ShapeSpec, get_norm
 from .backbone import Backbone
 from .build import BACKBONE_REGISTRY
 from .resnet import build_resnet_backbone
+from .shufflenetv2 import build_shufflenetv2_backbone
 
-__all__ = ["build_resnet_fpn_backbone", "build_retinanet_resnet_fpn_backbone", "FPN"]
+__all__ = ["build_resnet_fpn_backbone", "build_retinanet_resnet_fpn_backbone",
+           "build_retinanet_shufflenetv2_fpn_backbone", "build_shufflenetv2_fpn_backbone", "FPN"]
 
 
 class FPN(Backbone):
@@ -240,6 +242,39 @@ def build_retinanet_resnet_fpn_backbone(cfg, input_shape: ShapeSpec):
         out_channels=out_channels,
         norm=cfg.MODEL.FPN.NORM,
         top_block=LastLevelP6P7(in_channels_p6p7, out_channels),
+        fuse_type=cfg.MODEL.FPN.FUSE_TYPE,
+    )
+    return backbone
+
+
+@BACKBONE_REGISTRY.register()
+def build_retinanet_shufflenetv2_fpn_backbone(cfg, input_shape: ShapeSpec):
+    bottom_up = build_shufflenetv2_backbone(cfg, input_shape)
+    in_features = cfg.MODEL.FPN.IN_FEATURES
+    out_channels = cfg.MODEL.FPN.OUT_CHANNELS
+    in_channels_p6p7 = bottom_up.output_shape()["stage4"].channels
+    backbone = FPN(
+        bottom_up=bottom_up,
+        in_features=in_features,
+        out_channels=out_channels,
+        norm=cfg.MODEL.FPN.NORM,
+        top_block=LastLevelP6P7(in_channels_p6p7, out_channels, in_feature="stage4"),
+        fuse_type=cfg.MODEL.FPN.FUSE_TYPE,
+    )
+    return backbone
+
+
+@BACKBONE_REGISTRY.register()
+def build_shufflenetv2_fpn_backbone(cfg, input_shape: ShapeSpec):
+    bottom_up = build_shufflenetv2_backbone(cfg, input_shape)
+    in_features = cfg.MODEL.FPN.IN_FEATURES
+    out_channels = cfg.MODEL.FPN.OUT_CHANNELS
+    backbone = FPN(
+        bottom_up=bottom_up,
+        in_features=in_features,
+        out_channels=out_channels,
+        norm=cfg.MODEL.FPN.NORM,
+        top_block=LastLevelMaxPool(),
         fuse_type=cfg.MODEL.FPN.FUSE_TYPE,
     )
     return backbone

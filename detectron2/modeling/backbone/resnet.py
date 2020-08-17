@@ -489,7 +489,6 @@ class BasicStem(CNNBlockBase):
         return x
 
 
-
 class ResNet(Backbone):
     """
     Implement :paper:`ResNet`.

@@ -57,7 +57,11 @@ _C.INPUT.MAX_SIZE_TRAIN = 1333
 _C.INPUT.MIN_SIZE_TEST = 800
 # Maximum size of the side of the image during testing
 _C.INPUT.MAX_SIZE_TEST = 1333
-
+# if keep ratio when resize
+_C.INPUT.KEEP_RATIO = True
+# if not keep ratio, use shapes for resize
+_C.INPUT.RESIZE_SHAPES_TRAIN = [(480, 736), (512, 768), (544, 800), (576, 832)]
+_C.INPUT.RESIZE_SHAPES_TEST = [(512, 768)]
 # `True` if cropping is used for data augmentation during training
 _C.INPUT.CROP = CN({"ENABLED": False})
 # Cropping type:
@@ -493,18 +497,27 @@ _C.MODEL.RESNETS.DEFORM_MODULATED = False
 _C.MODEL.RESNETS.DEFORM_NUM_GROUPS = 1
 
 
-# Apply deep stem 
+# Apply deep stem
 _C.MODEL.RESNETS.DEEP_STEM = False
 # Apply avg after conv2 in the BottleBlock
 # When AVD=True, the STRIDE_IN_1X1 should be False
 _C.MODEL.RESNETS.AVD = False
-# Apply avg_down to the downsampling layer for residual path 
+# Apply avg_down to the downsampling layer for residual path
 _C.MODEL.RESNETS.AVG_DOWN = False
 
 # Radix in ResNeSt
 _C.MODEL.RESNETS.RADIX = 1
 # Bottleneck_width in ResNeSt
 _C.MODEL.RESNETS.BOTTLENECK_WIDTH = 64
+
+
+# ---------------------------------------------------------------------------- #
+# shufflenetv2
+# ---------------------------------------------------------------------------- #
+_C.MODEL.SHUFFLENETV2 = CN()
+_C.MODEL.SHUFFLENETV2.WIDTH_MUL = "W1_0"
+_C.MODEL.SHUFFLENETV2.NORM = "BN"
+_C.MODEL.SHUFFLENETV2.OUT_FEATURES = ["stage2", "stage3", "stage4"]
 
 
 # ---------------------------------------------------------------------------- #

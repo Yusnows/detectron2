@@ -29,6 +29,7 @@ __all__ = [
     "RandomLighting",
     "RandomRotation",
     "Resize",
+    "RandomResize",
     "ResizeShortestEdge",
     "RandomCrop_CategoryAreaConstraint",
 ]
@@ -119,6 +120,20 @@ class Resize(Augmentation):
     def get_transform(self, img):
         return ResizeTransform(
             img.shape[0], img.shape[1], self.shape[0], self.shape[1], self.interp
+        )
+
+
+class RandomResize(Augmentation):
+    def __init__(self, shapes, interp=Image.BILINEAR):
+        assert isinstance(shapes, list), "shapes must be list(tuple)"
+        shapes = [tuple(shape) for shape in shapes]
+        self._init(locals())
+
+    def get_transform(self, img):
+        size = np.random.choice(np.arange(len(self.shapes)))
+        size = self.shapes[size]
+        return ResizeTransform(
+            img.shape[0], img.shape[1], size[0], size[1], self.interp
         )
 
 
@@ -319,7 +334,7 @@ class RandomCrop_CategoryAreaConstraint(Augmentation):
                 crop_size = self.crop_aug.get_crop_size((h, w))
                 y0 = np.random.randint(h - crop_size[0] + 1)
                 x0 = np.random.randint(w - crop_size[1] + 1)
-                sem_seg_temp = sem_seg[y0 : y0 + crop_size[0], x0 : x0 + crop_size[1]]
+                sem_seg_temp = sem_seg[y0: y0 + crop_size[0], x0: x0 + crop_size[1]]
                 labels, cnt = np.unique(sem_seg_temp, return_counts=True)
                 if self.ignored_category is not None:
                     cnt = cnt[labels != self.ignored_category]

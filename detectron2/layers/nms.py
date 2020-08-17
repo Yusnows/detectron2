@@ -4,6 +4,7 @@
 import torch
 from torchvision.ops import boxes as box_ops
 from torchvision.ops import nms  # BC-compat
+import torch.nn as nn
 
 
 def batched_nms(
@@ -146,3 +147,11 @@ def batched_nms_rotated(boxes, scores, idxs, iou_threshold):
     boxes_for_nms[:, :2] += offsets[:, None]
     keep = nms_rotated(boxes_for_nms, scores, iou_threshold)
     return keep
+
+
+def simple_nms(heat, kernel=3, out_heat=None):
+    pad = (kernel - 1) // 2
+    hmax = nn.functional.max_pool2d(heat, (kernel, kernel), stride=1, padding=pad)
+    keep = (hmax == heat).float()
+    out_heat = heat if out_heat is None else out_heat
+    return out_heat * keep

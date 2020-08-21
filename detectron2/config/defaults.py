@@ -59,6 +59,7 @@ _C.INPUT.MIN_SIZE_TEST = 800
 _C.INPUT.MAX_SIZE_TEST = 1333
 # if keep ratio when resize
 _C.INPUT.KEEP_RATIO = True
+_C.INPUT.PADDING = True
 # if not keep ratio, use shapes for resize
 _C.INPUT.RESIZE_SHAPES_TRAIN = [(480, 736), (512, 768), (544, 800), (576, 832)]
 _C.INPUT.RESIZE_SHAPES_TEST = [(512, 768)]

@@ -134,6 +134,65 @@ class ResizeTransform(Transform):
         return ResizeTransform(self.new_h, self.new_w, self.h, self.w, self.interp)
 
 
+class ResizePaddingTransform(Transform):
+    def __init__(self, h, w, new_h, new_w, interp=None):
+        super().__init__()
+        if interp is None:
+            interp = Image.BILINEAR
+        h_ratio = new_h / h
+        w_ratio = new_w / w
+        # pad_sizes [left, right, top, dowm], for easy postprocess, left and top should be 0.
+        pad_sizes = [0, 0, 0, 0]
+        if h_ratio < w_ratio:
+            tmp = int(w * h_ratio)
+            pad_sizes[1] = new_w - tmp
+            new_w = tmp
+            del tmp
+        elif h_ratio > w_ratio:
+            tmp = int(h * w_ratio)
+            pad_sizes[3] = new_h - tmp
+            new_h = tmp
+            del tmp
+        self._set_attributes(locals())
+
+    def apply_image(self, img, interp=None):
+        assert img.shape[:2] == (self.h, self.w)
+        assert len(img.shape) <= 4
+
+        if img.dtype == np.uint8:
+            pil_image = Image.fromarray(img)
+            interp_method = interp if interp is not None else self.interp
+            pil_image = pil_image.resize((self.new_w, self.new_h), interp_method)
+            ret = np.asarray(pil_image)
+            pad_widthes = ((self.pad_sizes[2], self.pad_sizes[3]),
+                           (self.pad_sizes[0], self.pad_sizes[1]),
+                           (0, 0))
+            ret = np.pad(ret, pad_widthes, 'constant')
+        else:
+            # PIL only supports uint8
+            img = torch.from_numpy(img)
+            shape = list(img.shape)
+            shape_4d = shape[:2] + [1] * (4 - len(shape)) + shape[2:]
+            img = img.view(shape_4d).permute(2, 3, 0, 1)  # hw(c) -> nchw
+            _PIL_RESIZE_TO_INTERPOLATE_MODE = {Image.BILINEAR: "bilinear", Image.BICUBIC: "bicubic"}
+            mode = _PIL_RESIZE_TO_INTERPOLATE_MODE[self.interp]
+            img = F.interpolate(img, (self.new_h, self.new_w), mode=mode, align_corners=False)
+            img = F.pad(img, self.pad_sizes, mode='constant', value=0.0)
+            shape[:2] = (self.new_h + self.pad_sizes[3], self.new_w + self.pad_sizes[1])
+            ret = img.permute(2, 3, 0, 1).view(shape).numpy()  # nchw -> hw(c)
+
+        return ret
+
+    def apply_coords(self, coords):
+        coords[:, 0] = coords[:, 0] * (self.new_w * 1.0 / self.w)
+        coords[:, 1] = coords[:, 1] * (self.new_h * 1.0 / self.h)
+        return coords
+
+    def apply_segmentation(self, segmentation):
+        segmentation = self.apply_image(segmentation, interp=Image.NEAREST)
+        return segmentation
+
+
 class RotationTransform(Transform):
     """
     This method returns a copy of this image, rotated the given

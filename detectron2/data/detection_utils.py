@@ -136,8 +136,12 @@ def _apply_exif_orientation(image):
     """
     if not hasattr(image, "getexif"):
         return image
-
-    exif = image.getexif()
+    exif = None
+    try:
+        exif = image.getexif()
+    except:
+        print("can not get exif message")
+        return image
 
     if exif is None:
         return image
